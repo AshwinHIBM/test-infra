@@ -1,13 +1,16 @@
-ARG GOLANG_VERSION=1.22.4
-ARG IBM_CLOUD_VERSION=2.26.1
-ARG TERRAFORM_PROVIDER_IBM_VERSION=1.66.0
-ARG TERRAFORM_PROVIDER_NULL_VERSION=3.2.2
-FROM golang:$GOLANG_VERSION AS builder
+ARG GOLANG_VERSION=1.26.2
+ARG IBM_CLOUD_VERSION=2.43.0
+ARG TERRAFORM_PROVIDER_IBM_VERSION=2.1.0
+ARG TERRAFORM_PROVIDER_NULL_VERSION=3.2.4
+FROM --platform=$BUILDPLATFORM public.ecr.aws/docker/library/golang:$GOLANG_VERSION AS builder
+
+ARG TARGETARCH
+ENV GOARCH=$TARGETARCH
 
 RUN go install rsc.io/goversion@v1.2.0
 
 ARG TF_VERSION
-ENV TF_VERSION ${TF_VERSION:-v1.5.7}
+ENV TF_VERSION ${TF_VERSION:-v1.15.1}
 
 ARG TERRAFORM_PROVIDER_IBM_VERSION
 ENV TERRAFORM_PROVIDER_IBM_VERSION=$TERRAFORM_PROVIDER_IBM_VERSION
@@ -29,16 +32,16 @@ RUN git clone -b v${TERRAFORM_PROVIDER_NULL_VERSION} --single-branch https://git
     cd terraform-provider-null && \
     go build .
 
-FROM debian:bookworm
+FROM public.ecr.aws/docker/library/debian:bookworm
 
 ARG TF_PLUGIN_PATH
 ENV TF_PLUGIN_PATH ${TF_PLUGIN_PATH:-/root/.terraform.d/plugins/registry.terraform.io}
 
 ARG GOLANG_VERSION
-ENV GOLANG_VERSION ${GOLANG_VERSION:-1.22.4}
+ENV GOLANG_VERSION ${GOLANG_VERSION:-1.26.2}
 
 ARG IBM_CLOUD_VERSION
-ENV IBM_CLOUD_VERSION ${IBM_CLOUD_VERSION:-2.26.1}
+ENV IBM_CLOUD_VERSION ${IBM_CLOUD_VERSION:-2.43.0}
 
 WORKDIR /workspace
 RUN mkdir -p /workspace
@@ -46,7 +49,7 @@ ENV WORKSPACE=/workspace \
     TERM=xterm
 ENV PATH /usr/local/go/bin:$PATH
 
-ARG KUBECTL_VERSION=v1.30.2
+ARG KUBECTL_VERSION=v1.36.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-transport-https \
@@ -84,11 +87,11 @@ RUN set -eux; \
     dpkgArch="$(dpkg --print-architecture)"; \
     case "${dpkgArch##*-}" in \
         'amd64') \
-            url="https://storage.googleapis.com/golang/go${GOLANG_VERSION}.linux-amd64.tar.gz"; \
+            url="https://golang.org/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz"; \
             ibm_cloud_url="https://download.clis.cloud.ibm.com/ibm-cloud-cli/${IBM_CLOUD_VERSION}/IBM_Cloud_CLI_${IBM_CLOUD_VERSION}_amd64.tar.gz"; \
             ;; \
         'ppc64el') \
-            url="https://storage.googleapis.com/golang/go${GOLANG_VERSION}.linux-ppc64le.tar.gz"; \
+            url="https://golang.org/dl/go${GOLANG_VERSION}.linux-ppc64le.tar.gz"; \
             ibm_cloud_url="https://download.clis.cloud.ibm.com/ibm-cloud-cli/${IBM_CLOUD_VERSION}/IBM_Cloud_CLI_${IBM_CLOUD_VERSION}_ppc64le.tar.gz"; \
             ;; \
     esac; \
