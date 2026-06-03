@@ -21,9 +21,10 @@ postsubmits:
         - image: quay.io/powercloud/docker-ce-build@sha256:06746a0fd11df7b559fcd780829323a1c05dff85fee7dc50c60df4e262e601ba
           resources:
             requests:
-              cpu: "8000m"
+              cpu: "4000m"
             limits:
-              cpu: "8000m"
+              cpu: "4000m"
+              memory: "340Mi"
           command:
           - /bin/bash
           args:
@@ -73,9 +74,10 @@ postsubmits:
         - image: quay.io/powercloud/docker-ce-build@sha256:06746a0fd11df7b559fcd780829323a1c05dff85fee7dc50c60df4e262e601ba
           resources:
             requests:
-              cpu: "8000m"
+              cpu: "4000m"
             limits:
-              cpu: "8000m"
+              cpu: "4000m"
+              memory: "340Mi"
           command:
           - /bin/bash
           args:
