@@ -1,18 +1,6 @@
 # Containerfile for test-containerd scripts
 FROM public.ecr.aws/docker/library/debian:bookworm
 
-# Avoid interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
-
-# IBM Cloud CLI version (can be overridden at build time)
-ARG IBMCLOUD_VERSION=2.43.0
-ENV IBMCLOUD_VERSION=${IBMCLOUD_VERSION}
-
-ARG GO_VERSION=1.26.4
-
-# Add Go to PATH
-ENV PATH="/usr/local/go/bin:${PATH}"
-
 # Install required packages that are not present in Linux by default
 RUN apt-get update && apt-get install -y \
     curl \
@@ -20,33 +8,10 @@ RUN apt-get update && apt-get install -y \
     openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
-RUN set -eux; \
-    dpkgArch="$(dpkg --print-architecture)"; \
-    case "${dpkgArch##*-}" in \
-        'amd64') \
-            go_url="https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz"; \
-            ibm_cloud_url="https://download.clis.cloud.ibm.com/ibm-cloud-cli/${IBMCLOUD_VERSION}/IBM_Cloud_CLI_${IBMCLOUD_VERSION}_amd64.tar.gz"; \
-            ;; \
-        'ppc64el') \
-            go_url="https://dl.google.com/go/go${GO_VERSION}.linux-ppc64le.tar.gz"; \
-            ibm_cloud_url="https://download.clis.cloud.ibm.com/ibm-cloud-cli/${IBMCLOUD_VERSION}/IBM_Cloud_CLI_${IBMCLOUD_VERSION}_ppc64le.tar.gz"; \
-            ;; \
-    esac; \
-    \
-    curl "$go_url" --progress-bar -o go.tgz; \
-    tar -C /usr/local -xzf go.tgz; \
-    rm go.tgz; \
-    export PATH="/usr/local/go/bin:$PATH"; \
-    go version; \
-    \
-    wget -O ibm_cloud.tgz "$ibm_cloud_url" --progress=dot:giga; \
-    tar -xf ibm_cloud.tgz; \
-    ./Bluemix_CLI/install; \
-    ibmcloud plugin install power-iaas; \
-    ibmcloud plugin install cloud-object-storage; \
-    rm -rf ./Bluemix_CLI; \
-    rm ibm_cloud.tgz; \
-    rm -rf /var/lib/apt/lists/*;
+RUN curl -fsSL https://clis.cloud.ibm.com/install/linux | sh \
+ && ibmcloud plugin install power-iaas \
+ && ibmcloud plugin install cloud-object-storage
+
 WORKDIR /workspace
 
 # Made with Bob
